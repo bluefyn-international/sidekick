@@ -31,7 +31,7 @@ class DebouncedJob implements ShouldQueue
         int         $minimumMillisecondsToWait,
         int|null    $maximumMillisecondsToWait = null,
     ) : PendingClosureDispatch|PendingDispatch {
-        $debouncer = new self();
+        $debouncer = new static();
 
         $debouncer->_jobToDebounce = $jobToDebounce;
         $debouncer->_minimumMillisecondsToWait = $minimumMillisecondsToWait;
