@@ -128,7 +128,11 @@ class DebouncedJob implements ShouldQueue
     {
         $minimum = now()->addMilliseconds($this->_minimumMillisecondsToWait);
 
-        Cache::put($this->getMinimumWaitTimeKey(), $minimum, $minimum->addMinute());
+        Cache::put(
+            $this->getMinimumWaitTimeKey(),
+            $minimum,
+            $minimum->copy()->addMinute()
+        );
     }
 
     protected function getMinimumWaitTimeKey() : string
@@ -143,7 +147,11 @@ class DebouncedJob implements ShouldQueue
             $maximum = now()->addMilliseconds($this->_maximumMillisecondsToWait);
         }
 
-        Cache::put($this->getMaximumWaitTimeKey(), $maximum, $maximum?->addMinute());
+        Cache::put(
+            $this->getMaximumWaitTimeKey(),
+            $maximum,
+            $maximum?->copy()?->addMinute()
+        );
     }
 
     protected function getMaximumWaitTimeKey() : string
