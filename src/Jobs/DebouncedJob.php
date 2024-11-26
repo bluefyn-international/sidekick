@@ -87,8 +87,8 @@ class DebouncedJob implements ShouldQueue
 
         $now = now();
 
-        $minimumWait = $now->diffInMilliseconds($minimum);
-        $maximumWait = $now->diffInMilliseconds($maximum);
+        $minimumWait = $minimum->diffInMilliseconds($now, absolute: false);
+        $maximumWait = $maximum->diffInMilliseconds($now, absolute: false);
 
         if ($minimumWait < 0) {
             $minimumWait = 0;
@@ -98,7 +98,7 @@ class DebouncedJob implements ShouldQueue
             $maximumWait = 0;
         }
 
-        return min($minimumWait, $maximumWait);
+        return max($minimumWait, $maximumWait);
     }
 
     protected function checkAndWaitUntilReady() : void
