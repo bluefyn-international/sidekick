@@ -161,10 +161,14 @@ class DebouncedJob implements ShouldQueue
 
     protected function calculateCacheKey() : void
     {
+        $prefix = get_class($this->_jobToDebounce);
+        $suffix = method_exists($this->_jobToDebounce, 'getDebounceCacheKey')
+            ? $this->_jobToDebounce->getCacheKey() : sha1(json_encode($this->_jobToDebounce));
+
         $this->_cacheKey = sprintf(
             '%s:%s',
-            get_class($this->_jobToDebounce),
-            sha1(json_encode($this->_jobToDebounce)),
+            $prefix,
+            $suffix,
         );
     }
 
