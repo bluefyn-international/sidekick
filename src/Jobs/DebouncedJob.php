@@ -116,7 +116,7 @@ class DebouncedJob implements ShouldQueue
 
     protected function setDebounce() : void
     {
-        Cache::put($this->getDebounceKey(), true, now()->addMilliseconds($this->getWaitTime() * 2));
+        Cache::put($this->getDebounceKey(), true, 30);
     }
 
     protected function getDebounceKey() : string
