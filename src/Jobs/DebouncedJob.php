@@ -163,7 +163,7 @@ class DebouncedJob implements ShouldQueue
     {
         $prefix = get_class($this->_jobToDebounce);
         $suffix = method_exists($this->_jobToDebounce, 'getDebounceCacheKey')
-            ? $this->_jobToDebounce->getCacheKey() : sha1(json_encode($this->_jobToDebounce));
+            ? $this->_jobToDebounce->getDebounceCacheKey() : sha1(json_encode($this->_jobToDebounce));
 
         $this->_cacheKey = sprintf(
             '%s:%s',
