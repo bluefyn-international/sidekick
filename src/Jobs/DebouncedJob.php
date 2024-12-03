@@ -31,7 +31,7 @@ class DebouncedJob implements ShouldQueue
         int         $minimumMillisecondsToWait,
         int|null    $maximumMillisecondsToWait = null,
     ) : PendingClosureDispatch|PendingDispatch {
-        $debouncer = new self();
+        $debouncer = new static();
 
         $debouncer->_jobToDebounce = $jobToDebounce;
         $debouncer->_minimumMillisecondsToWait = $minimumMillisecondsToWait;
@@ -87,8 +87,8 @@ class DebouncedJob implements ShouldQueue
 
         $now = now();
 
-        $minimumWait = $now->diffInMilliseconds($minimum);
-        $maximumWait = $now->diffInMilliseconds($maximum);
+        $minimumWait = $minimum->diffInMilliseconds($now, absolute: false);
+        $maximumWait = $maximum->diffInMilliseconds($now, absolute: false);
 
         if ($minimumWait < 0) {
             $minimumWait = 0;
@@ -98,7 +98,7 @@ class DebouncedJob implements ShouldQueue
             $maximumWait = 0;
         }
 
-        return min($minimumWait, $maximumWait);
+        return max($minimumWait, $maximumWait);
     }
 
     protected function checkAndWaitUntilReady() : void
@@ -116,7 +116,7 @@ class DebouncedJob implements ShouldQueue
 
     protected function setDebounce() : void
     {
-        Cache::put($this->getDebounceKey(), true, now()->addMilliseconds($this->getWaitTime() * 2));
+        Cache::put($this->getDebounceKey(), true, 30);
     }
 
     protected function getDebounceKey() : string
@@ -128,7 +128,11 @@ class DebouncedJob implements ShouldQueue
     {
         $minimum = now()->addMilliseconds($this->_minimumMillisecondsToWait);
 
-        Cache::put($this->getMinimumWaitTimeKey(), $minimum, $minimum->addMinute());
+        Cache::put(
+            $this->getMinimumWaitTimeKey(),
+            $minimum,
+            $minimum->copy()->addMinute()
+        );
     }
 
     protected function getMinimumWaitTimeKey() : string
@@ -143,7 +147,11 @@ class DebouncedJob implements ShouldQueue
             $maximum = now()->addMilliseconds($this->_maximumMillisecondsToWait);
         }
 
-        Cache::put($this->getMaximumWaitTimeKey(), $maximum, $maximum?->addMinute());
+        Cache::put(
+            $this->getMaximumWaitTimeKey(),
+            $maximum,
+            $maximum?->copy()?->addMinute()
+        );
     }
 
     protected function getMaximumWaitTimeKey() : string
@@ -153,10 +161,14 @@ class DebouncedJob implements ShouldQueue
 
     protected function calculateCacheKey() : void
     {
+        $prefix = get_class($this->_jobToDebounce);
+        $suffix = method_exists($this->_jobToDebounce, 'getDebounceCacheKey')
+            ? $this->_jobToDebounce->getDebounceCacheKey() : sha1(json_encode($this->_jobToDebounce));
+
         $this->_cacheKey = sprintf(
             '%s:%s',
-            get_class($this->_jobToDebounce),
-            sha1(json_encode($this->_jobToDebounce)),
+            $prefix,
+            $suffix,
         );
     }
 
